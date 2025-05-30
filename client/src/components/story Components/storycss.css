@@ -2,6 +2,21 @@
   animation: animate 1s forwards;
 }
 
+.commentAnimate {
+  animation: cmtAnimate 1s forwards;
+}
+
+.cmtCloseAnimate {
+  animation: cmtCloseAnimate 1s forwards;
+}
+
+.enlargeCmtAnimate {
+  animation: enlargeCmtAnimate 1s forwards;
+}
+
+.minimizeCmtAnim {
+  animation: minimizeCmtAnim 1s forwards;
+}
 @keyframes animate {
   0% {
     width: 80%;
@@ -9,6 +24,41 @@
   }
   100% {
     width: 100%;
+    height: 100%;
+  }
+}
+
+@keyframes cmtAnimate {
+  0% {
+    height: 0%;
+  }
+  100% {
+    height: 50%;
+  }
+}
+
+@keyframes enlargeCmtAnimate {
+  0% {
+    height: 50%;
+  }
+  100% {
+    height: 100%;
+  }
+}
+
+@keyframes minimizeCmtAnim {
+  0% {
+    height: 100%;
+  }
+  100% {
+    height: 50%;
+  }
+}
+@keyframes cmtCloseAnimate {
+  100% {
+    height: 0%;
+  }
+  0% {
     height: 100%;
   }
 }

@@ -8,6 +8,7 @@ import { logoutUser } from "../../redux/userSlice";
 import { useNavigate } from "react-router-dom";
 import { flashError } from "../../helpers/flashMsgProvider";
 import { io } from "socket.io-client";
+import "./storycss.css";
 
 function EnlargedStory({ story, setShow }) {
   const navigate = useNavigate();
@@ -19,6 +20,10 @@ function EnlargedStory({ story, setShow }) {
   const [isLiked, setIsLiked] = useState();
   const [isDisLiked, setIsDisLiked] = useState();
   const [shouldPlay, setShouldPlay] = useState(false);
+
+  const [numOfCmts, setNumOfCmts] = useState(story.comments?.length);
+  const [isEnlargeCmt, setIsEnlargeCmt] = useState(false);
+  const [newCmt, setNewCmt] = useState("");
 
   const socketRef = useRef();
 
@@ -43,16 +48,14 @@ function EnlargedStory({ story, setShow }) {
           setDisLikes(data.disLikes);
         }
       });
+    }
 
-      // socketRef.current.on("disconnect", () => {
-      //   socketRef.current.emit("userOffline", { user_id: currUser._id });
-      // });
-
-      return () => {
+    return () => {
+      if (socketRef.current) {
         socketRef.current.disconnect();
         socketRef.current = null;
-      };
-    }
+      }
+    };
   }, []);
 
   useEffect(() => {
@@ -70,14 +73,13 @@ function EnlargedStory({ story, setShow }) {
   }, [story, currUser]);
 
   const handelLikeBtn = async () => {
-    setShouldPlay(true);
-
     if (isDisLiked) {
       setDisLikes((p) => p - 1);
       setIsDisLiked(false);
 
       setLikes((p) => p + 1);
       setIsLiked(true);
+      setShouldPlay(true);
 
       if (!currUser) flashError("login first to like");
       else {
@@ -105,8 +107,6 @@ function EnlargedStory({ story, setShow }) {
             likes: likes + 1,
             disLikes: disLikes - 1,
           });
-
-          console.log("success : liked");
         } else if (res.data.error) flashError(`Internal Server error ☹️`); //: ${res.data.msg} for err msg
       }
     } else if (isLiked) {
@@ -146,6 +146,7 @@ function EnlargedStory({ story, setShow }) {
     } else {
       setLikes((p) => p + 1);
       setIsLiked(true);
+      setShouldPlay(true);
       if (!currUser) flashError("login first to like");
       else {
         let url = `${import.meta.env.VITE_API_BACKEND_URL}updateLike`;
@@ -172,8 +173,6 @@ function EnlargedStory({ story, setShow }) {
             likes: likes + 1,
             disLikes: disLikes,
           });
-
-          console.log("success : liked");
         } else if (res.data.error) flashError(`Internal Server error ☹️`); //: ${res.data.msg} for err msg
       }
     }
@@ -182,10 +181,6 @@ function EnlargedStory({ story, setShow }) {
   };
 
   const handelDisLikeBtn = async () => {
-    // if(isLiked){
-    //   setLikes(p => p- 1);
-    //   setIsLiked(false);
-    // }
     if (isDisLiked) {
       setDisLikes((p) => p - 1);
       setIsDisLiked(false);
@@ -216,7 +211,7 @@ function EnlargedStory({ story, setShow }) {
             disLikes: disLikes - 1,
           });
 
-          console.log("success : liked");
+          // console.log("success : liked");
         } else if (res.data.error) flashError(`Internal Server error ☹️`); //: ${res.data.msg} for err msg
       }
     } else if (isLiked) {
@@ -287,18 +282,37 @@ function EnlargedStory({ story, setShow }) {
             disLikes: disLikes + 1,
           });
 
-          console.log("success : liked");
+          // console.log("success : liked");
         } else if (res.data.error) flashError(`Internal Server error ☹️`); //: ${res.data.msg} for err msg
       }
     }
   };
 
+  const openComments = () => {
+    document.getElementById("commentWindow").classList.remove("hidden");
+    document.getElementById("commentWindow").classList.add("flex");
+    document.getElementById("commentWindow").classList.add("commentAnimate");
+
+    document
+      .getElementById("commentWindow")
+      .classList.remove("enlargeCmtAnimate");
+    document
+      .getElementById("commentWindow")
+      .classList.remove("minimizeCmtAnim");
+    setIsEnlargeCmt(false);
+  };
+
+  const sendCmt = async () => {
+    console.log("Submitted");
+  };
   return (
     <div
       onDoubleClick={handelLikeBtn}
       id={story._id}
       key={story._id}
-      onClick={(e) => e.stopPropagation()}
+      onClick={(e) => {
+        e.stopPropagation();
+      }}
       className="w-full h-full bg-white flex-shrink-0 flex flex-col snap-start relative z-[9999] min-[443px]:w-[65%] md:w-[45%] lg:w-[35%] mx-auto"
     >
       {shouldPlay ? (
@@ -314,17 +328,17 @@ function EnlargedStory({ story, setShow }) {
         className="fa-solid fa-arrow-left hidden absolute z-[99999] text-white shadow-xl top-2 left-2 max-[443px]:block max-md:text-xl text-3xl cursor-pointer"
       ></i>
       <video autoPlay muted loop className="w-full h-full object-cover">
-        <source src={story?.video.url} type={story?.video.fileType} />
+        <source src={story?.video?.url} type={story?.video?.fileType} />
         Your browser does not support the video tag.
       </video>
       {/* like button */}
       <div
         onClick={handelLikeBtn}
-        className="absolute cursor-pointer right-3 bottom-[30%] flex flex-col items-center text-white"
+        className="absolute cursor-pointer right-3 bottom-[40%] flex flex-col items-center text-white"
       >
         {isLiked ? (
           <>
-            <i className="fa-solid fa-thumbs-up like-icon text-4xl !text-blue-500 mr-1"></i>
+            <i className="fa-solid fa-thumbs-up like-icon text-4xl hover:scale-110 !text-blue-500 mr-1"></i>
             {/* <lord-icon3
               style={{ width: "50px", height: "50px" }}
               src="https://cdn.lordicon.com/ohfmmfhn.json"
@@ -348,11 +362,11 @@ function EnlargedStory({ story, setShow }) {
       {/* unlike Btn */}
       <div
         onClick={handelDisLikeBtn}
-        className="absolute cursor-pointer right-3 bottom-[20%] flex flex-col items-center text-white"
+        className="absolute cursor-pointer right-3 bottom-[30%] flex flex-col items-center text-white"
       >
         {isDisLiked ? (
           <>
-            <i className="fa-solid fa-thumbs-down text-4xl text-blue-600 mr-1"></i>
+            <i className="fa-solid fa-thumbs-down text-4xl hover:scale-110 text-blue-600 mr-1"></i>
             {/* <lord-icon3
               style={{ width: "50px", height: "50px" }}
               src="https://cdn.lordicon.com/ohfmmfhn.json"
@@ -374,7 +388,15 @@ function EnlargedStory({ story, setShow }) {
         )}
         <div className="font-bold text-sm">{disLikes}</div>
       </div>
-
+      {/* comment btn */}
+      <div
+        onClick={openComments}
+        className="absolute cursor-pointer right-3 bottom-[23%] flex flex-col items-center text-white"
+      >
+        <i className="fa-solid fa-comment text-3xl mr-1 hover:scale-110 text-blue-400"></i>
+        <div className="font-bold text-sm">{numOfCmts}</div>
+      </div>
+      {/* bottom of story */}
       <div className="w-full flex items-center space-x-3 !bg-transparent justify-between p-1 px-2 h-[8%]">
         <div className="flex flex-col items-start">
           <p className="">{story?.title}</p>
@@ -383,8 +405,80 @@ function EnlargedStory({ story, setShow }) {
         <img
           src={story.owner.image.url}
           alt=""
-          className="w-[45px] h-[50px] rounded-full "
+          className="w-[45px] h-[50px] rounded-full p-1"
         />
+      </div>
+
+      {/* comment window */}
+      <div
+        id="commentWindow"
+        className="absolute !z-[999999] flex-col hidden bottom-0 bg-white w-full"
+      >
+        {/* top comment btn */}
+        <div className="w-full h-[50px] bg-gray-200 flex justify-between items-center px-2">
+          {/* close btn */}
+          <div
+            onClick={() => {
+              document
+                .getElementById("commentWindow")
+                .classList.toggle("hidden");
+            }}
+          >
+            close
+          </div>
+          {/* minimize & maximize */}
+          <div
+            onClick={() => {
+              if (
+                // document
+                //   .getElementById("commentWindow")
+                //   .classList.contains("enlargeCmtAnimate")
+                isEnlargeCmt
+              ) {
+                document
+                  .getElementById("commentWindow")
+                  .classList.remove("enlargeCmtAnimate");
+                document
+                  .getElementById("commentWindow")
+                  .classList.add("minimizeCmtAnim");
+                setIsEnlargeCmt(false);
+              } else {
+                document
+                  .getElementById("commentWindow")
+                  .classList.remove("minimizeCmtAnim");
+                document
+                  .getElementById("commentWindow")
+                  .classList.add("enlargeCmtAnimate");
+                setIsEnlargeCmt(true);
+              }
+            }}
+          >
+            {isEnlargeCmt ? "Minimize " : "maximize"}
+          </div>
+        </div>
+
+        {/* comment window body */}
+        <div className="w-full h-full flex flex-col">
+          {/* new comment enter form */}
+          <div className="w-full flex items-center mt-auto shadow-lg h-[50px] p-1">
+            <img
+              src={story.owner.image.url}
+              alt=""
+              className="w-[45px] h-[50px] rounded-full p-2"
+            />
+            <input
+              value={newCmt}
+              onKeyUp={(e) => {
+                if (e.key == "Enter") sendCmt();
+              }}
+              onChange={(e) => setNewCmt(e.target.value)}
+              type="text"
+              className="w-full outline-none focus:outline-none px-2 font-semibold"
+              placeholder="enter a comment"
+            />
+            <div className="pr-2">send</div>
+          </div>
+        </div>
       </div>
     </div>
   );
